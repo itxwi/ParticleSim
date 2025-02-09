@@ -10,7 +10,7 @@ screen = pygame.display.set_mode((width, height))
 
 # CONSTANTS
 COULOMBS_CONSTANT = 9.1 * 10  # Fixed typo
-DRAW_VECTORS = True
+DRAW_VECTORS = False
 CONST_PARTICLES = {
     'electron': {
         'charge': -1,
@@ -24,6 +24,7 @@ CONST_PARTICLES = {
         'radius': 10,
         'color': [255, 0, 0]
     },
+    #neutrons are kinda useless
     'neutron': {
         'charge': 0,
         'mass': 5,
@@ -68,7 +69,6 @@ def electroMagnetic(particle1, particle2):
         Vector(magForce, magDirection1, particle1.pos).update()
         Vector(magForce, magDirection2, particle2.pos).update()
 
-
 class Vector:
     def __init__(self,magnitude,direction,startpos,width=1,color = [255,255,255]):
         self.mag = magnitude
@@ -85,11 +85,13 @@ class Vector:
         pygame.draw.line(screen,self.color,self.startpos,endpos)
     
 class Particle:
-    def __init__(self,pos,id,radius=3,color = [255,0,0], width = 1, vel=[0,0]):
+    def __init__(self,pos,id,radius=3,color = [255,0,0], width = 100, vel=[0,0], fixed = False):
         self.vel = vel
         self.pos = pos
         self.width = width
         self.id = id
+
+        self.fixed = fixed
 
         try:
             self.mass = CONST_PARTICLES[id]['mass']
@@ -98,17 +100,15 @@ class Particle:
             self.color = CONST_PARTICLES[id]['color']
         except KeyError:
             print('Invalid particle ID')
-            self.mass = 1
-            self.charge = 0
-            self.rad = radius
-            self.color = color
+            del self
 
     def update(self):
         # velocity updates
-        self.pos = [
-            self.pos[0] + self.vel[0],
-            self.pos[1] + self.vel[1]
-        ]
+        if not self.fixed:
+            self.pos = [
+                self.pos[0] + self.vel[0],
+                self.pos[1] + self.vel[1]
+            ]
         # acceleration is rate of velocity change
         pygame.draw.circle(screen, self.color, self.pos, self.rad, self.width)
 
@@ -120,7 +120,7 @@ class Particle:
             objects.remove(self)
             del self
 
-
+fixed = False
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -129,11 +129,11 @@ while True:
             if event.key == pygame.K_ESCAPE:
                 exit()
             elif event.key == pygame.K_q:
-                objects.append(Particle(pygame.mouse.get_pos(), 'proton'))
+                objects.append(Particle(pygame.mouse.get_pos(), 'proton',fixed=fixed))
             elif event.key == pygame.K_e:
-                objects.append(Particle(pygame.mouse.get_pos(), 'electron'))
-            elif event.key == pygame.K_n:  # Added neutron creation
-                objects.append(Particle(pygame.mouse.get_pos(), 'neutron'))
+                objects.append(Particle(pygame.mouse.get_pos(), 'electron',fixed=fixed))
+            elif event.key == pygame.K_r:
+                fixed= not fixed
 
     screen.fill((0, 0, 0))
 
