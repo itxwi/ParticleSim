@@ -1,6 +1,6 @@
 import pygame
-import random
 import math
+import time
 
 pygame.init()
 width,height = 1200,800
@@ -43,6 +43,7 @@ MagneticMode = False
 
 #SIMUATLION VARIABLES
 objects = []
+emiiters = []
 #magfield = [[-MAXFIELD for _ in range(width)] if h%5 else [MAXFIELD for _ in range(width)] for h in range(height)]  # ranges from -1 to 1
 magfield = [[0 for _ in range(width)] for h in range(height)]
 fieldimage = pygame.Surface((width,height))
@@ -190,6 +191,23 @@ class Particle:
             objects.remove(self)
             del self
 
+
+class Emitter:
+    def __init__(self,pos ,vel = [0,10], id = 'electron',rad = 5,period=.5):
+        self.pos = pos
+        self.vel = vel
+        self.id = id
+        self.rad = rad
+        self.period=period
+
+        self.lastemit = 0
+
+    def update(self):
+        pygame.draw.circle(screen,CONST_PARTICLES[self.id]["color"],self.pos,self.rad,width=1)
+        if time.time()-self.lastemit>self.period:
+            self.lastemit = time.time()
+            objects.append(Particle(self.pos,self.id,vel=self.vel))
+        
 #delete after adding the field making thing
 #draw_fields()
 
@@ -205,6 +223,7 @@ while True:
                     objects.append(Particle(pygame.mouse.get_pos(), 'proton',fixed=FixedParticle,vel=[0,0]))
                 else:
                     #create a postiive magnetic field here
+                    magfield = [[MAXFIELD for _ in range(width)] for h in range(height)]
                     #no way to create yet
                     
                     draw_fields()
@@ -213,8 +232,10 @@ while True:
                     objects.append(Particle(pygame.mouse.get_pos(), 'electron',fixed=FixedParticle,vel=[0,0]))
                 else:
                     #create a negative magnetic field here
-
+                    magfield = [[-MAXFIELD for _ in range(width)] for h in range(height)]
                     draw_fields()
+            if event.key == pygame.K_l:
+                emiiters.append(Emitter(pygame.mouse.get_pos()))
                 
             elif event.key == pygame.K_r:
                 FixedParticle= not FixedParticle
@@ -230,6 +251,8 @@ while True:
 
     for obj in objects:
         obj.update()
+    for emitter in emiiters:
+        emitter.update()
 
     pygame.display.flip()
     clock.tick(120)
